@@ -1,7 +1,7 @@
 """Blogly application."""
 
-from flask import Flask, request, redirect, render_template
-from models import db, connect_db, User
+from flask import Flask, request, redirect, render_template, flash
+from models import db, connect_db, User, Post
 
 app = Flask(__name__)
 
@@ -65,7 +65,7 @@ def show_user(user_id):
     return render_template("detail.html", user=user)
 
 
-@app.route("/<int:user_id>/edit")
+@app.route("/users/<int:user_id>/edit")
 def edit_form_user(user_id):
     """Show Edit form displaying info on an existing user."""
     user = User.query.get_or_404(user_id)
@@ -73,7 +73,7 @@ def edit_form_user(user_id):
     return render_template("edit.html", user=user)
 
 
-@app.route("/<int:user_id>/edit", methods=["POST"])
+@app.route("/users/<int:user_id>/edit", methods=["POST"])
 def edit_user(user_id):
     """Edits existing user and redirect to list."""
 
@@ -96,3 +96,34 @@ def users_destroy(user_id):
     db.session.commit()
 
     return redirect("/users")
+
+
+
+
+    #GET /users/[user-id]/posts/new
+
+@app.route('/users/<int:user_id>/posts/new', methods=["GET"])
+def add_post(user_id):
+    """Show form to add a post for that user."""
+    user = User.query.get_or_404(user_id)
+
+    return render_template("post_form.html", user=user)
+
+
+
+@app.route('/users/<int:user_id>/posts/new', methods=["POST"])
+def handle_add_post(user_id):
+    """Handle add form; add post and redirect to the user detail page."""
+    user = User.query.get_or_404(user_id)
+    title = request.form['title']
+    content = request.form['content']
+    user = user
+
+    new_post = Post(title=title, content=content, user=user)
+    db.session.add(new_post)
+    db.session.commit()
+    flash(f"Post '{new_post.title}' added.")
+
+    return redirect(f"/{user.id}")
+
+
